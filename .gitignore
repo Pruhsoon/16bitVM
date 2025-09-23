@@ -1,0 +1,22 @@
+# Build artifacts
+obj/
+*.o
+*.d
+*.exe
+16bitVM
+
+# Logs and temp files
+*.log
+*.tmp
+*.bak
+*~
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDE/project settings
+.vscode/
+.idea/
+*.swp
+*.swo
