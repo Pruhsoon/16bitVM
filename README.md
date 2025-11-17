@@ -1,76 +1,160 @@
-16bitVM
+# 16-Bit Virtual Machine (VM)
 
-A lightweight 16-bit Virtual Machine implemented in C++, simulating registers, memory, and instruction execution.
-This project demonstrates low-level system design concepts such as instruction decoding, stack operations, and program execution.
+This project implements a simple **16-bit virtual machine**, complete with its own CPU registers, stack, memory, instruction set, assembler helpers, and execution engine. It is built to emulate a small, custom low-level CPU architecture that can execute machine-level programs.
 
-📂 Project Structure
-VM/
-├── SRC/
-│   ├── vm.cpp      # Core implementation of the VM (CPU, execution, instructions)
-│   ├── vm.h        # VM data structures, opcodes, instruction set
-│   ├── utils.h     # Utility functions (copy, helpers, etc.)
-├── Makefile        # Build automation for Linux/WSL/Unix
+---
 
-⚙️ Functionality
+## Overview
 
-Implements a 16-bit CPU model with registers: AX, BX, CX, DX, SP, IP.
+This VM simulates a tiny CPU with:
 
-Supports instruction set (e.g., mov, push, pop, hlt, conditional ops).
+* 4 general-purpose **16-bit registers**: `AX`, `BX`, `CX`, `DX`
+* A **16-bit Stack Pointer (SP)`**
+* A **16-bit Instruction Pointer (IP)`**
+* A **FLAGS register** with simple CPU flags
+* **64 KB of memory**
+* A **bytecode instruction set** (custom ISA)
+* **Instruction handlers** written in C to emulate CPU behavior
 
-Provides a stack-based memory model with push/pop functionality.
+Programs are written using helper macros that generate machine code automatically.
 
-Executes programs represented as sequences of instructions.
+---
 
-Modular design: instructions are mapped via instrmap for easy extension.
+##  Instruction Set Highlights
 
-🚀 How to Build & Run
-1️⃣ Clone the repository
-git clone https://github.com/Pruhsoon/16bitVM.git
-cd 16bitVM
+The VM currently supports instructions such as:
 
-2️⃣ Build the project (using Make)
+* **mov ax, imm16** — load a 16-bit value into AX
+* **mov bx, imm16**, etc.
+* **push reg** — push a register onto the stack
+* **pop reg** — restore a register from the stack
+* **ste** — set Equal flag
+* **cle** — clear Equal flag
+* **jmp, je, jne** — control flow
+* **hlt** — halt execution
 
-On Linux/WSL/macOS:
+Each instruction has:
 
-make
+* an **opcode**
+* a **size**
+* a **handler function**
+
+When the VM runs, it:
+
+1. Fetches opcode from memory
+2. Decodes it using an opcode table
+3. Reads arguments (if any)
+4. Calls the corresponding handler (C function)
+5. Updates registers/memory/flags
+6. Moves to next instruction
+
+This simulates a real processor pipeline.
+
+---
+
+##  How Execution Works
+
+When you run the VM:
+
+1. Memory is initialized
+2. CPU registers are reset
+3. A program is assembled into bytecode using helper macros
+4. The bytecode is loaded into VM memory at address 0
+5. The main execution loop starts:
+
+   * Fetch → Decode → Execute → Repeat
+6. Execution stops when `hlt` is encountered
+
+The VM prints out register state when halting.
+
+---
+
+##  Project Structure
+
+* **vm.h / vm.c** — Core VM implementation
+* **opcode.h / opcode.c** — Instruction definitions and handlers
+* **assembler.h** — Helper macros for generating bytecode
+* **example.c** — Shows how to build and run a sample program
+* **types.h** — Shared types for arguments and opcode mapping
+
+---
+
+##  Tech Stack
+
+This project is implemented using:
+
+### **Languages**
+
+* **C** — Core implementation of VM, memory model, registers, and instructions
+
+### **Tools & Concepts**
+
+* **Custom Instruction Set Architecture (ISA)**
+* **Function pointer-based dispatch table** (for opcodes)
+* **Manual memory & stack simulation**
+* **Endian-aware byte reading/writing**
+* **Assembler-like macros to generate bytecode programs**
+
+No external libraries are required — it's a pure C, self-contained VM.
+
+---
+
+##  Example Program
+
+```c
+mov ax, 0x04
+ste
+push ax
+mov bx, 0x5005
+pop bx
+hlt
+```
+
+This program sets AX to 4, pushes it, pops into BX, and halts.
+
+When the VM halts, the final registers are:
+
+```
+AX = 0004
+BX = 0004
+SP = FFFF
+FLAGS = 0008
+```
+
+---
+
+##  Running the VM
+
+Compile and run using:
+
+```bash
+gcc -o vm main.c vm.c opcode.c assembler.c
+./vm
+```
+
+---
+
+##  Extend the VM
+
+You can easily add new instructions:
+
+1. Add a new opcode value to the enum
+2. Create a handler function
+3. Add it to the instruction map
+4. Use assembler macros to generate bytecode
+
+For example, adding `add ax, bx` takes only a few lines.
+
+---
+
+##  Summary
+
+This project is a complete educational CPU emulator, demonstrating:
+
+* how processors interpret opcodes
+* how registers and stacks work internally
+* how to create a custom instruction set
+* how to build bytecode programs
+* how interpreters execute low-level instructions
 
 
-On Windows (PowerShell/CMD) (with MinGW or similar):
-
-mingw32-make
-
-3️⃣ Run the VM
-./16bitVM
-
-
-Clean build artifacts:
-
-make clean
-
-🛠️ Tech Stack
-
-C++11
-
-Make (build system)
-
-Designed for cross-platform use (Linux, WSL, Windows via MinGW)
-
-📘 Example Usage
-
-The VM can execute programs defined as sequences of instructions, for example:
-
-prog = exampleprogram(vm,
-    i(i1(mov_ax, 0x04)),
-    i(i0(ste)),
-    i(i1(push, 0x00)),
-    i(i1(pop, 0x01)),
-    i(i0(hlt))
-);
-
-✨ Future Improvements
-
-Add more instructions (arithmetic, branching).
-
-Implement I/O devices (e.g., serial, floppy simulation).
-
-Extend to support assembly parsing instead of hardcoded instruction arrays.
